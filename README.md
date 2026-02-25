@@ -1,18 +1,32 @@
-# Proximity dial video queue
+# Proximity Dial Video Queue
 
-Full-screen video pages for display (e.g. Cisco DeskPro). GitHub Pages: https://wxsd-sales.github.io/proximity-dial-video-queue/
+Full-screen video pages for display on devices such as Cisco DeskPro. Hosted on GitHub Pages.
 
-## File names and what changed
+**Live site:** https://wxsd-sales.github.io/proximity-dial-video-queue/
 
-- **`index.html`** — Native `<video>` page (uses `video.mp4`). Best for DeskPro: same-origin muted video often autoplays where YouTube iframe does not. Loops via duration-based replay.
+## Files
+
+- **`index.html`** — Native `<video>` page (uses `video.mp4`). Best for DeskPro: same-origin muted video often autoplays where a YouTube iframe does not. Loops via duration-based replay.
 - **`youtube.html`** — YouTube embed with Tap-to-play overlay. Use when you only have a YouTube link. Autoplay may work on desktop; on DeskPro a single tap starts playback.
-- **`video.mp4`** — The video file used by `index.html`. Hosted in the repo so the native page works on GitHub Pages.
+- **`video.mp4`** — Video file used by `index.html`. Hosted in the repo so the native page works on GitHub Pages.
 
-Previously the main entry was the YouTube page; the native video page is now the default (`index.html`) for reliable autoplay on embedded devices.
+The default entry (`index.html`) is the native video page for reliable autoplay on embedded devices.
 
 ## URLs
 
-| Page    | URL |
-|--------|-----|
+| Page | URL |
+|------|-----|
 | Native (default) | https://wxsd-sales.github.io/proximity-dial-video-queue/ |
-| YouTube         | https://wxsd-sales.github.io/proximity-dial-video-queue/youtube.html |
+| YouTube | https://wxsd-sales.github.io/proximity-dial-video-queue/youtube.html |
+
+## License
+
+All contents are licensed under the MIT license. Please see [license](LICENSE) for details.
+
+## Disclaimer
+
+Everything included is for demo and Proof of Concept purposes only. Use of the site is solely at your own risk. This site may contain links to third party content, which we do not warrant, endorse, or assume liability for. These demos are for Cisco Webex use cases, but are not Official Cisco Webex Branded demos.
+
+## Support
+
+Please contact the Webex SD team at [wxsd@external.cisco.com](mailto:wxsd@external.cisco.com?subject=ProximityDialVideoQueue) for questions. Or for Cisco internal, reach out to us on Webex App via our bot globalexpert@webex.bot & choose "Engagement Type: API/SDK Proof of Concept Integration Development".
