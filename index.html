@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Permissions-Policy" content="autoplay=(self), fullscreen=(self)">
   <title>YouTube — Full screen</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -22,9 +23,27 @@
       height: 100%;
       border: none;
     }
+    #tap-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      font-size: 1.25rem;
+      cursor: pointer;
+      z-index: 10;
+      user-select: none;
+    }
+    #tap-overlay.hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
+  <div id="tap-overlay" aria-label="Tap to play video">Tap to play</div>
   <div id="player-container"></div>
   <script>
     var tag = document.createElement('script');
@@ -46,8 +65,22 @@
         },
         events: {
           onReady: function (event) {
-            event.target.mute();
-            event.target.playVideo();
+            var p = event.target;
+            p.mute();
+            p.playVideo();
+
+            var overlay = document.getElementById('tap-overlay');
+            overlay.addEventListener('click', function () {
+              p.unmute();
+              p.playVideo();
+              overlay.classList.add('hidden');
+            });
+
+            setTimeout(function () {
+              if (p.getPlayerState && p.getPlayerState() === YT.PlayerState.PLAYING) {
+                overlay.classList.add('hidden');
+              }
+            }, 1500);
           }
         }
       });
