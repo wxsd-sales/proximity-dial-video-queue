@@ -38,9 +38,15 @@
       }
       setTimeout(function () {
         console.log('replaying');
-        myVid.currentTime = 0;
+        myVid.load();
         myVid.play();
       }, useDuration * 1000);
+    };
+
+    myVid.onended = function () {
+      console.log('replaying (ended)');
+      myVid.currentTime = 0;
+      myVid.play();
     };
 
     myVid.onerror = function () {
