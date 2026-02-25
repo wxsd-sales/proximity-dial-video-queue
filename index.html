@@ -4,87 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Permissions-Policy" content="autoplay=(self), fullscreen=(self)">
-  <title>YouTube — Full screen</title>
+  <title>Video — Full screen (native)</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; }
-    #player-container {
+    body { background-color: black; }
+    video {
+      width: 100%;
+      height: 100vh;
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-    }
-    #player-container iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-    #tap-overlay {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.7);
-      color: #fff;
-      font-family: system-ui, sans-serif;
-      font-size: 1.25rem;
-      cursor: pointer;
-      z-index: 10;
-      user-select: none;
-    }
-    #tap-overlay.hidden {
-      display: none;
+      object-fit: contain;
     }
   </style>
 </head>
 <body>
-  <div id="tap-overlay" aria-label="Tap to play video">Tap to play</div>
-  <div id="player-container"></div>
+  <!--
+    Same-origin native <video autoplay muted> often autoplays on DeskPro's browser
+    where YouTube iframe does not. Use this page when you have an MP4 (e.g. exported
+    from YouTube with permission). Put the file in this repo or set src to your URL.
+  -->
+  <video id="myvideo" width="100%" height="100%" autoplay muted playsinline>
+    <source src="video.mp4" type="video/mp4" />
+  </video>
   <script>
-    var tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    var useDuration = 36;
+    var myVid = document.getElementById('myvideo');
 
-    var player;
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player('player-container', {
-        width: '100%',
-        height: '100%',
-        videoId: 'JNMuuV3o_DU',
-        playerVars: {
-          autoplay: 1,
-          mute: 1,
-          playsinline: 1,
-          rel: 0
-        },
-        events: {
-          onReady: function (event) {
-            var p = event.target;
-            p.mute();
-            p.playVideo();
+    myVid.onplay = function () {
+      if (!isNaN(myVid.duration)) {
+        useDuration = myVid.duration;
+        console.log('useDuration set to: ' + useDuration);
+      }
+      setTimeout(function () {
+        console.log('replaying');
+        myVid.currentTime = 0;
+        myVid.play();
+      }, useDuration * 1000);
+    };
 
-            var overlay = document.getElementById('tap-overlay');
-            overlay.addEventListener('click', function () {
-              p.unMute();
-              p.playVideo();
-              overlay.classList.add('hidden');
-            });
-
-            setTimeout(function () {
-              if (p.getPlayerState && p.getPlayerState() === YT.PlayerState.PLAYING) {
-                overlay.classList.add('hidden');
-              }
-            }, 1500);
-          }
-        }
-      });
-    }
+    myVid.onerror = function () {
+      console.warn('Video failed to load. Add video.mp4 to this folder or set <source src=\"...\"> to your MP4 URL.');
+    };
   </script>
 </body>
 </html>
