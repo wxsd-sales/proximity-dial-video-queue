@@ -4,6 +4,9 @@ Full-screen video pages for display on devices such as Cisco DeskPro. Hosted on 
 
 **Live site:** https://wxsd-sales.github.io/proximity-dial-video-queue/
 
+## Demo
+[![Vidcast Overview](https://github.com/user-attachments/assets/c7936749-d874-4902-aeae-08fd5ea9d53f)](https://app.vidcast.io/share/642a98bf-542f-4911-8a7a-7d7302d987f3)
+
 ## Files
 
 - **`index.html`** — Native `<video>` page (uses `video.mp4`). Best for DeskPro: same-origin muted video often autoplays where a YouTube iframe does not. Loops via duration-based replay.
