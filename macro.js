@@ -63,8 +63,8 @@ const config = {
   panelId: 'call-queue',  // Our base Panel Id for all speed dial buttons
   prompt: {
     waitTime: 10,
-    title: 'Person Detected',
-    message: 'Welcome! Press the "Call For Assistance" button when you are ready.',
+    title: 'Welcome!',
+    message: 'Press "Call For Assistance" when you are ready.',
     panelId: 'proximity-calling'
   }
 }
@@ -310,18 +310,20 @@ async function createWarningPanel(prompt){
                         <Type>Text</Type>
                         <Options>size=4;fontSize=normal;align=center</Options>
                     </Widget></Row>
-                    <Row><Widget>
-                        <WidgetId>${prompt.panelId}-dial</WidgetId>
-                        <Name>${dialName}</Name>
-                        <Type>Button</Type>
-                        <Options>size=4</Options>
-                    </Widget></Row>
-                    <Row><Widget>
+                    <Row>
+                    <Widget>
                         <WidgetId>${prompt.panelId}-cancel</WidgetId>
                         <Name>Cancel</Name>
                         <Type>Button</Type>
                         <Options>size=2</Options>
-                    </Widget></Row>
+                    </Widget>
+                    <Widget>
+                        <WidgetId>${prompt.panelId}-dial</WidgetId>
+                        <Name>${dialName}</Name>
+                        <Type>Button</Type>
+                        <Options>size=2</Options>
+                    </Widget>
+                    </Row>
                     <Options>hideRowNames=1</Options>
                   </Page>
                 </Panel></Extensions>`;
