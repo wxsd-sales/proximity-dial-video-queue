@@ -10,7 +10,7 @@
  *                    	wimills@cisco.com
  *                    	Cisco Systems
  * 
- * Version: 1-0-1
+ * Version: 1-0-2
  * Released: 02/25/26
  * 
  * This is a Webex Device Macro which displays a video while 
@@ -20,6 +20,7 @@
  * 1. Provides easily configurable & self creating speed dial buttons
  * 2. Supports multiple call queues & video content display
  * 3. Can auto hide/unhide Call control UI in and out of call
+ * 4. Proximity detection shows a dial prompt (manual dial only, no auto-dial)
  * 
  * Requirements:
  * 1. Webex Device must be provisioned with a Webex Calling subscription
@@ -62,8 +63,8 @@ const config = {
   panelId: 'call-queue',  // Our base Panel Id for all speed dial buttons
   prompt: {
     waitTime: 10,
-    title: `Person Detected`,
-    text: ['Your call will begin in ', ' seconds'],
+    title: 'Person Detected',
+    message: 'Welcome! Press the "Call For Assistance" button when you are ready.',
     panelId: 'proximity-calling'
   }
 }
@@ -90,7 +91,7 @@ xapi.Config.RoomAnalytics.PeopleCountOutOfCall.set('On');
 xapi.Config.RoomAnalytics.PeoplePresenceDetector.set('On');
 xapi.Status.RoomAnalytics.Engagement.CloseProximity.on(state => processChange('CloseProximity', state));
 xapi.Status.RoomAnalytics.PeopleCount.Current.on(state => processChange('PeopleCount', state));
-xapi.Event.UserInterface.Extensions.Panel.Close.on(monitorPanel);
+xapi.Event.UserInterface.Extensions.Panel.Close.on(onProximityPanelClosed);
 xapi.Event.UserInterface.Extensions.Widget.Action.on(processWidget);
 
 // Initially chech the number of calls to set the UI config
@@ -210,18 +211,34 @@ async function processChange(type, state) {
   }
 }
 
-function monitorPanel(event){
-  console.log('Panel Closed - TimeRemaining', timeRemaining)
-  if(event.PanelId != config.prompt.panelId) return;
-  if(timeRemaining == null) return;
-  console.log('Reopening panel')
-  openPanel();
+function onProximityPanelClosed(event) {
+  if (event.PanelId != config.prompt.panelId) return;
+  if (interval == null) return;
+  console.log('Proximity panel dismissed early');
+  clearInterval(interval);
+  interval = null;
+  timeRemaining = null;
 }
 
-function processWidget(event){
-  if(event.Type != 'clicked' && event.WidgetId != config.prompt.panelId ) return;
-  stopCountDown();
-  suspendMonitoring(60);
+function processWidget(event) {
+  if (event.Type != 'clicked') return;
+
+  const dialId = config.prompt.panelId + '-dial';
+  const cancelId = config.prompt.panelId + '-cancel';
+
+  if (event.WidgetId == dialId) {
+    console.log('Proximity dial button pressed');
+    stopCountDown();
+    dial(config.buttons[0].target);
+    suspendMonitoring(60);
+    return;
+  }
+
+  if (event.WidgetId == cancelId) {
+    console.log('Proximity prompt cancelled');
+    stopCountDown();
+    suspendMonitoring(60);
+  }
 }
 
 function suspendMonitoring(seconds){
@@ -236,7 +253,7 @@ function suspendMonitoring(seconds){
 async function startCountDown(){
   timeRemaining = config.prompt.waitTime;
   await xapi.Command.Standby.Deactivate();
-  await updateText(config.prompt.waitTime);
+  await updateCountdown(config.prompt.waitTime);
   await openPanel();
   interval = setInterval(countDown, 1000)
 }
@@ -244,17 +261,18 @@ async function startCountDown(){
 function stopCountDown(){
   clearInterval(interval)
   interval = null;
+  timeRemaining = null;
   closePanel();
 }
 
 function countDown() {
-  if (timeRemaining == 0 && !suspend) {
+  timeRemaining = timeRemaining - 1;
+  if (timeRemaining <= 0) {
+    console.log('Proximity prompt timed out, closing panel');
     stopCountDown();
-    placeCall();
-  } else {
-    timeRemaining = timeRemaining - 1;
-    updateText(timeRemaining)
+    return;
   }
+  updateCountdown(timeRemaining);
 }
 
 function openPanel() {
@@ -265,23 +283,15 @@ function closePanel() {
   xapi.Command.UserInterface.Extensions.Panel.Close();
 }
 
-async function placeCall() {
-  const calls = await xapi.Status.SystemUnit.State.NumberOfActiveCalls.get();
-  if (calls > 0) {
-    console.log(`Timer for dialling destination return`)
-    return;
-  }
-  dial(config.buttons[0].target)
-}
-
-function updateText(text){
-  text = `${config.prompt.text[0]} ${text} ${config.prompt.text[1]}`;
-  console.log(`Updating Text [${text}]`)
+function updateCountdown(seconds){
+  const text = `Closing in ${seconds} seconds`;
+  console.log(`Updating countdown [${text}]`)
   return xapi.Command.UserInterface.Extensions.Widget.SetValue(
-    { Value: text, WidgetId: config.prompt.panelId+'-text' });
+    { Value: text, WidgetId: config.prompt.panelId + '-countdown' });
 }
 
 async function createWarningPanel(prompt){
+  const dialName = config.buttons[0].name;
   const panel = `<Extensions><Panel>
                   <Location>Hidden</Location>
                   <Name>${prompt.title}</Name>
@@ -290,9 +300,21 @@ async function createWarningPanel(prompt){
                     <Name>${prompt.title}</Name>
                     <Row><Widget>
                         <WidgetId>${prompt.panelId}-text</WidgetId>
-                        <Name>${prompt.text[0]} ${prompt.waitTime} ${prompt.text[1]}</Name>
+                        <Name>${prompt.message}</Name>
                         <Type>Text</Type>
                         <Options>size=4;fontSize=normal;align=center</Options>
+                    </Widget></Row>
+                    <Row><Widget>
+                        <WidgetId>${prompt.panelId}-countdown</WidgetId>
+                        <Name>Closing in ${prompt.waitTime} seconds</Name>
+                        <Type>Text</Type>
+                        <Options>size=4;fontSize=normal;align=center</Options>
+                    </Widget></Row>
+                    <Row><Widget>
+                        <WidgetId>${prompt.panelId}-dial</WidgetId>
+                        <Name>${dialName}</Name>
+                        <Type>Button</Type>
+                        <Options>size=4</Options>
                     </Widget></Row>
                     <Row><Widget>
                         <WidgetId>${prompt.panelId}-cancel</WidgetId>
